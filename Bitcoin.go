@@ -10,13 +10,15 @@ import (
 // The underlying value is always in satoshis. 0.1 bitcoin is represented
 // as 10000000.
 // Bitcoin can do arithmetic like an integer.
+// Will typically be used like "value := 250 * bitcoin.Satoshi" or
+// "value := 1400 * bitcoin.MilliBTC".
 type Bitcoin int64
 
 const (
 	Satoshi  Bitcoin = 1
 	MicroBTC Bitcoin = 100 * Satoshi
-	MilliBTC Bitcoin = 100000 * Satoshi
-	BTC      Bitcoin = 100000000 * Satoshi
+	MilliBTC Bitcoin = 1000 * MicroBTC
+	BTC      Bitcoin = 1000 * MilliBTC
 
 	// AllBTC is all the minable bitcoin.
 	AllBTC Bitcoin = 20999999*BTC + 97690000*Satoshi
