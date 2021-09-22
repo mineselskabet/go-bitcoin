@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 )
 
 // Bitcoin is an integer precision type representing a value in Bitcoin.
@@ -23,6 +24,18 @@ const (
 	// AllBTC is all the minable bitcoin.
 	AllBTC Bitcoin = 20999999*BTC + 97690000*Satoshi
 )
+
+// Float64 returns the amount as floats of unit. For example
+// calling Float64(MilliBTC) on 1.5BTC will return 1500.0.
+// Note: This must not be used for calculations as precision
+// will be lost.
+func (v Bitcoin) Float64(unit Bitcoin) float64 {
+	if unit == 0 {
+		return math.Inf(1)
+	}
+
+	return float64(v) / float64(unit)
+}
 
 // Abs returns the absolute value.
 func (v Bitcoin) Abs() Bitcoin {
