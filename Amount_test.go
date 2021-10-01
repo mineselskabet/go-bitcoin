@@ -14,7 +14,7 @@ var (
 func TestParse(t *testing.T) {
 	cases := []struct {
 		in       string
-		expected Bitcoin
+		expected Amount
 	}{
 		{"", 0},
 		{"0", 0},
