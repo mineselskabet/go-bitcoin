@@ -48,7 +48,7 @@ func (a Amount) Abs() Amount {
 
 // MarshalText implements encoding.TextMarshaler.
 func (a Amount) MarshalText() (text []byte, err error) {
-	left, right := a.SplitString(0)
+	left, right := a.SplitString(BTC)
 
 	return []byte(left + "." + right), nil
 }
@@ -93,14 +93,17 @@ func (a *Amount) UnmarshalJSON(in []byte) error {
 	return nil
 }
 
-func (a Amount) split(pos int) (int, int) {
-	posValue := 1 * Satoshi
-	for i := 8; i > pos; i-- {
-		posValue *= 10
+func (a Amount) split(unit Amount) (int, int) {
+	if a == 0 {
+		return 0, 0
 	}
 
-	right := a % posValue
-	left := (a - right) / posValue
+	if unit == 0 {
+		return 0, -1
+	}
+
+	right := a % unit
+	left := (a - right) / unit
 
 	return int(left), int(right.Abs())
 }
@@ -108,10 +111,13 @@ func (a Amount) split(pos int) (int, int) {
 // SplitString splits the value as two strings at pos. Pos 0
 // is the decimal point in BTC. SplitString(0) for 1.055000 BTC
 // will result in the values "1" and "055".
-func (a Amount) SplitString(pos int) (string, string) {
-	left, right := a.split(pos)
+// If amount is not equal to 10^x for some integer value of x,
+// the result is undefined.
+func (a Amount) SplitString(unit Amount) (string, string) {
+	left, right := a.split(unit)
 
-	rightFormat := fmt.Sprintf("%%0%dd", 8-pos)
+	log10 := int(math.Log10(float64(unit)))
+	rightFormat := fmt.Sprintf("%%0%dd", log10)
 
 	leftStr := fmt.Sprintf("%d", left)
 	rightStr := fmt.Sprintf(rightFormat, right)
@@ -127,58 +133,33 @@ func (a Amount) SplitString(pos int) (string, string) {
 	return leftStr, rightStr
 }
 
-// BTC formats the value as a string expressed in BTC including a unit suffix.
-func (a Amount) BTC() string {
-	left, right := a.SplitString(0)
-	unit := "BTC"
+// Format will return a string representing the amount in units
+// of unit. For example Format(MilliBTC) returns "1500" for an
+// amount of 1.5 BTC.
+// If amount is not equal to 10^x for some integer value of x,
+// the result is undefined.
+func (a Amount) Format(unit Amount) string {
+	left, right := a.SplitString(unit)
 
 	if right == "0" {
-		return fmt.Sprintf("%s %s", left, unit)
+		return left
 	}
 
-	return fmt.Sprintf("%s.%s %s", left, right, unit)
-}
-
-// MilliBTC formats the value as a string representing a
-// number of MilliBTC including a unit suffix.
-func (a Amount) MilliBTC() string {
-	left, right := a.SplitString(3)
-	unit := "mBTC"
-
-	if right == "0" {
-		return fmt.Sprintf("%s %s", left, unit)
-	}
-
-	return fmt.Sprintf("%s.%s %s", left, right, unit)
-}
-
-// Satoshi formats the value as a string representing a number
-// of satoshis including suffix.
-func (a Amount) Satoshi() string {
-	return fmt.Sprintf("%d sats", a)
+	return left + "." + right
 }
 
 // String implements fmt.Stringer.
 func (a Amount) String() string {
-	left := fmt.Sprintf("%d", a)
-	right := "0"
-	unit := "sats"
-
 	switch {
 	case a.Abs() > BTC, a == 0:
-		left, right = a.SplitString(0)
-		unit = "BTC"
+		return a.Format(BTC) + " BTC"
 
 	case a.Abs() > MilliBTC:
-		left, right = a.SplitString(3)
-		unit = "mBTC"
-	}
+		return a.Format(MilliBTC) + " mBTC"
 
-	if right == "0" {
-		return fmt.Sprintf("%s %s", left, unit)
+	default:
+		return a.Format(Satoshi) + " sats"
 	}
-
-	return fmt.Sprintf("%s.%s %s", left, right, unit)
 }
 
 // Parse parses a numeric string representing a value in
