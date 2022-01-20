@@ -68,7 +68,7 @@ func (a *Amount) UnmarshalText(text []byte) error {
 // UnmarshalJSON implements json.Unmarshaler.
 func (a *Amount) UnmarshalJSON(in []byte) error {
 	if len(in) > 2 && in[len(in)-1] == '"' && in[0] == '"' {
-		in = in[1 : len(in)-2]
+		in = in[1 : len(in)-1]
 	}
 
 	err := a.UnmarshalText(in)
