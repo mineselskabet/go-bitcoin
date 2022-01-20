@@ -31,7 +31,7 @@ const (
 // will be lost.
 func (a Amount) Float64(unit Amount) float64 {
 	if unit == 0 {
-		return math.Inf(1)
+		return math.Inf(int(a))
 	}
 
 	return float64(a) / float64(unit)
